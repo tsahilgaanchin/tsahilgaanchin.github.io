@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Нэвтрэх — Хэлхээ Сим</title>
+<style>
+  html, body { margin:0; padding:0; }
+  body { font-family:-apple-system, system-ui, sans-serif; background:#EDEFF2; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+  .card { background:#fff; border-radius:16px; padding:32px 28px; width:100%; max-width:360px; box-shadow:0 10px 30px rgba(0,0,0,.08); box-sizing:border-box; margin:16px; }
+  h1 { font-size:19px; margin:0 0 4px; color:#1F2328; }
+  p.sub { font-size:13px; color:#6B7280; margin:0 0 20px; }
+  label { display:block; font-size:13px; color:#4B5563; margin-bottom:6px; margin-top:14px; font-weight:600; }
+  input { width:100%; padding:11px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:15px; box-sizing:border-box; }
+  input:focus { outline:2px solid #262A31; border-color:transparent; }
+  button { width:100%; margin-top:22px; padding:12px; border:none; border-radius:999px; background:#22C55E; color:#fff; font-size:15px; font-weight:700; cursor:pointer; }
+  button:disabled { opacity:.6; }
+  .err { color:#DC2626; font-size:13px; margin-top:10px; min-height:16px; }
+  .switch { text-align:center; margin-top:18px; font-size:13px; color:#4B5563; }
+  .switch a { color:#2563EB; text-decoration:none; font-weight:700; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>⚡ Хэлхээ Сим</h1>
+    <p class="sub">Симуляторт нэвтрэх</p>
+    <label for="email">Имэйл</label>
+    <input type="email" id="email" placeholder="you@example.com" autocomplete="username">
+    <label for="pass">Нууц үг</label>
+    <input type="password" id="pass" placeholder="••••••••" autocomplete="current-password">
+    <button id="btnLogin">Нэвтрэх</button>
+    <div class="err" id="err"></div>
+    <div class="switch">Бүртгэлгүй юу? <a href="register.html">Бүртгүүлэх</a></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    firebase.initializeApp(window.FIREBASE_CONFIG);
+    const auth = firebase.auth();
+
+    auth.onAuthStateChanged(user => {
+      if (user) window.location.href = 'index.html';
+    });
+
+    function translateErr(code){
+      const map = {
+        'auth/invalid-email': 'Имэйл хаяг буруу байна',
+        'auth/user-not-found': 'Ийм хэрэглэгч олдсонгүй',
+        'auth/wrong-password': 'Нууц үг буруу байна',
+        'auth/invalid-credential': 'Имэйл эсвэл нууц үг буруу байна',
+        'auth/too-many-requests': 'Оролдлого хэтэрсэн тул түр хүлээгээд дахин оролдоно уу',
+        'auth/network-request-failed': 'Сүлжээний алдаа гарлаа'
+      };
+      return map[code] || ('Алдаа гарлаа: ' + code);
+    }
+
+    const btn = document.getElementById('btnLogin');
+    const errEl = document.getElementById('err');
+
+    function doLogin(){
+      const email = document.getElementById('email').value.trim();
+      const pass = document.getElementById('pass').value;
+      errEl.textContent = '';
+      if(!email || !pass){ errEl.textContent = 'Имэйл болон нууц үгээ бөглөнө үү'; return; }
+      btn.disabled = true; btn.textContent = 'Түр хүлээнэ үү...';
+      auth.signInWithEmailAndPassword(email, pass)
+        .then(() => { window.location.href = 'index.html'; })
+        .catch(e => {
+          errEl.textContent = translateErr(e.code);
+          btn.disabled = false; btn.textContent = 'Нэвтрэх';
+        });
+    }
+    btn.onclick = doLogin;
+    document.getElementById('pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+  </script>
+</body>
+</html>
